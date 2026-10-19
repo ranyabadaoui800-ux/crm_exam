@@ -1,30 +1,49 @@
-const express = require('express');
+
+
+require("dotenv").config();
+
+const express = require("express");
+const mongoose = require("mongoose");
+const cors = require("cors");
+
+
+
 const app = express();
-const port = 4002
-const dotenv = require('dotenv');
-dotenv.config()
 
-app.get('/',(req,res)=>{
-    res.send('Hello from back');
-});
+app.use(cors());
 
-app.listen(port,()=>{
-    console.log("le serveur tourne dans le port "+ port);
-});
-const mongoose = require('mongoose');
+app.use(express.json());
+
+
+
+const MONGO_URI = process.env.MONGO_URI;
 
 async function connectDB() {
+    if (!MONGO_URI) {
+        throw new Error("MONGO_URI manquant dans le fichier .env");
+    }
+
+    await mongoose.connect(MONGO_URI);
+
+    console.log("✅ Connexion MongoDB réussie !");
+}
+
+
+async function startServer() {
     try {
-        const uri = process.env.MONGO_URI 
-        if (!uri) {
-            throw new Error('MONGO_URI / MONGODB_URI non définie dans le fichier .env');
-        }
-        await mongoose.connect(uri);
-        console.log('MongoDB connected successfully');
+        await connectDB();
+
+        const PORT = process.env.PORT || 3000;
+
+        app.listen(PORT, () => {
+            console.log(`🚀 Serveur lancé sur le port ${PORT}`);
+            console.log(`🌐 http://localhost:${PORT}`);
+        });
+
     } catch (error) {
-        console.error('MongoDB connection error:', error.message);
+        console.error("❌ Erreur :", error.message);
         process.exit(1);
     }
 }
 
-connectDB();
+startServer();
